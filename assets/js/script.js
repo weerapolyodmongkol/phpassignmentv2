@@ -95,74 +95,114 @@ function deleteMarkers() {
 	markers = [];
 }
 
+function actionSearch(callType) {
+	var keywords = $('#keywords').val();
+	var latlng = $('#latlng').val();
+	
+	$.ajax({
+		method : "GET",
+		url : "get_tweets",
+	    dataType: "json",
+		async: true,
+		data : {
+			keywords : keywords,
+			latlng : latlng,
+			calltype: callType
+		},
+		success: function (results) {
+			
+			var infoWindow = new google.maps.InfoWindow();
+			var i = 0;		
+			
+			if(null == results.tweets) {
+				return;
+			}
+			
+			var latlngStr = results.latlng.split(",",2);
+			var lat = parseFloat(latlngStr[0]);
+			var lng = parseFloat(latlngStr[1]);
+			
+			map.setCenter(new google.maps.LatLng(lat, lng));
+			map.setZoom(12);
+			
+			$.each(results.tweets.statuses, function() {
+				if ((typeof this.coordinates != "undefined") && (null != this.coordinates)) {
+
+					var twttext = this.text;
+					var twtdate = this.created_at;
+					var latlng = new google.maps.LatLng(this.coordinates.coordinates[1], this.coordinates.coordinates[0]);
+			       
+					var image = {
+						    url: this.user.profile_image_url,
+						    // This marker is 36 pixels wide by 36 pixels tall.
+						    size: new google.maps.Size(36, 36),
+						    // The origin for this image is 0,0.
+						    origin: new google.maps.Point(0,0),
+						    // The anchor for this image is the base of the flagpole at 0,32.
+						    anchor: new google.maps.Point(0, 32)
+						  };
+					
+					marker = new google.maps.Marker({
+						icon: image,
+			            position: latlng,
+			            map: map,
+			            visible: true
+			        });
+			        markers.push(marker);
+			        
+			        // Allow each marker to have an info window    
+			        google.maps.event.addListener(marker, 'click', (function(marker, i) {
+			            return function() {
+			                infoWindow.setContent('<div><p>' + twttext + '</p><br>' + twtdate);
+			                infoWindow.open(map, marker);
+			            }
+			        })(marker, i));
+			        i++;
+				}
+			});
+		showMarkers();
+	},
+	error: function (request, status, error) {
+        alert(request.responseText);
+    }
+		
+	});
+}
+
+$(document).on('click', 'a.history-link' ,function() {
+	event.preventDefault();
+	$('#history-modal').modal('hide');
+	var iId = $(this).attr('id');
+	
+	var keywords = $('#'+iId+'-keywords').val();
+	var latlng = $('#'+iId+'-latlng').val();
+	
+	$('#keywords').val(keywords);
+	$('#latlng').val(latlng);
+	deleteMarkers();
+	actionSearch('history');
+});
+
 $(document).ready(function() {
+	
+	$('#history-button').click(function(event) {
+		event.preventDefault();
+		$.ajax({
+			method : "GET",
+			url : config.base+'/index.php/'+'history',
+			async: true,
+			success: function (results) {
+				$('#history-modal .modal-content div').remove();
+				$('#history-modal .modal-content').append(results);
+			}
+		});
+		$('#history-modal').modal('show');
+	});
 	
 	$('#searchform').submit(function(event) {
 		event.preventDefault();
 		deleteMarkers();
-		var keywords = $('#keywords').val();
-		var latlng = $('#latlng').val();
-		
-		$.ajax({
-			method : "POST",
-			url : "get_tweets",
-		    dataType: "json",
-			async: true,
-			data : {
-				keywords : keywords,
-				latlng : latlng
-			},
-			success: function (results) {
-				
-				var infoWindow = new google.maps.InfoWindow();
-				var i = 0;		
-				
-				if(null == results.tweets) {
-					return;
-				}
-				
-				$.each(results.tweets.statuses, function() {
-					if ((typeof this.coordinates != "undefined") && (null != this.coordinates)) {
-
-						var twttext = this.text;
-						var twtdate = this.created_at;
-						var latlng = new google.maps.LatLng(this.coordinates.coordinates[1], this.coordinates.coordinates[0]);
-				       
-						var image = {
-							    url: this.user.profile_image_url,
-							    // This marker is 36 pixels wide by 36 pixels tall.
-							    size: new google.maps.Size(36, 36),
-							    // The origin for this image is 0,0.
-							    origin: new google.maps.Point(0,0),
-							    // The anchor for this image is the base of the flagpole at 0,32.
-							    anchor: new google.maps.Point(0, 32)
-							  };
-						
-						marker = new google.maps.Marker({
-							icon: image,
-				            position: latlng,
-				            map: map,
-				            visible: true
-				        });
-				        markers.push(marker);
-				        
-				        // Allow each marker to have an info window    
-				        google.maps.event.addListener(marker, 'click', (function(marker, i) {
-				            return function() {
-				                infoWindow.setContent('<div><p>' + twttext + '</p><br>' + twtdate);
-				                infoWindow.open(map, marker);
-				            }
-				        })(marker, i));
-				        i++;
-					}
-				});
-			showMarkers();
-		},
-		error: function (request, status, error) {
-	        alert(request.responseText);
-	    }
-			
-		});
+		actionSearch('general');
 	});
 	
 });
