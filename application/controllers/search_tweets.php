@@ -12,6 +12,7 @@ class Search_tweets extends CI_Controller {
 
 	public function get_tweets() {
 		$keywords = $this->input->post('keywords');
+		$keywords = rawurlencode($keywords);
 		$latlng = $this->input->post('latlng');
 		$latlng = substr($latlng, 1, -1);
 		$latlng = preg_replace('/\s+/', '', $latlng);
@@ -38,11 +39,4 @@ class Search_tweets extends CI_Controller {
 		
 		echo json_encode($result_data);
     }
-
-	public function test()
-	{
-		$this->load->view('header');
-		$this->load->view('search_bar');
-		$this->load->view('footer');
-	}
 }

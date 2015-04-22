@@ -18,13 +18,14 @@ function initialize() {
 	autocomplete.bindTo('bounds', map);
 
 	var infowindow = new google.maps.InfoWindow();
-	var marker = new google.maps.Marker({
-		map : map,
-		anchorPoint : new google.maps.Point(0, -29)
-	});
+	
 
 	google.maps.event.addListener(autocomplete, 'place_changed', function() {
 		infowindow.close();
+		var marker = new google.maps.Marker({
+			map : map,
+			anchorPoint : new google.maps.Point(0, -29)
+		});
 		marker.setVisible(false);
 		var place = autocomplete.getPlace();
 		if (!place.geometry) {
@@ -112,11 +113,13 @@ $(document).ready(function() {
 				latlng : latlng
 			},
 			success: function (results) {
-				console.log(results);
-//				var resultsObj = jQuery.parseJSON(results);
 				
 				var infoWindow = new google.maps.InfoWindow();
-				var i = 0;			
+				var i = 0;		
+				
+				if(null == results.tweets) {
+					return;
+				}
 				
 				$.each(results.tweets.statuses, function() {
 					if ((typeof this.coordinates != "undefined") && (null != this.coordinates)) {
