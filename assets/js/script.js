@@ -110,7 +110,6 @@ function actionSearch(callType) {
 			calltype: callType
 		},
 		success: function (results) {
-			
 			var infoWindow = new google.maps.InfoWindow();
 			var i = 0;		
 			
