@@ -24,8 +24,11 @@ class Search_tweets extends CI_Controller {
 		$sKeywords = urldecode($sKeywords);
 		$sKeywords = urlencode($sKeywords);
 		$sLatlng = $this->input->get('latlng');
-		$sLatlng = str_replace(array( '(', ')' ), '', $sLatlng);
+		$sLatlng = str_replace('+', ',', $sLatlng);
+		// $sLatlng = str_replace(array( '(', ')' ), '', $sLatlng);
 		$sLatlng = preg_replace('/\s+/', '', $sLatlng);
+		
+		$sRadius = $this->input->get('radius');;
 		
 		$aResultData = array();
 		$aResultData['latlng'] = $sLatlng;
@@ -44,7 +47,7 @@ class Search_tweets extends CI_Controller {
 		}
 		
 		//get cache
-		$sCacheTweets = $this->Tweets_cache_model->get_cache($sKeywords);
+		$sCacheTweets = $this->Tweets_cache_model->get_cache($sKeywords, 1);
 		if (false != $sCacheTweets) {
 			$aResultData['tweets'] = $sCacheTweets;
 			echo json_encode($aResultData);
@@ -64,7 +67,7 @@ class Search_tweets extends CI_Controller {
 		//fetch tweets
         $sServiceUrl = 'https://api.twitter.com/1.1/search/tweets.json';
 		$sParameters = '?q='.$sKeywords;
-		$sParameters .= '&geocode='.$sLatlng.',50km';
+		$sParameters .= '&geocode='.$sLatlng.','.$sRadius;
 		$oTweetsResponse = $this->TwitterAPIExchange->setGetfield($sParameters)
              ->buildOauth($sServiceUrl, 'GET')
              ->performRequest();

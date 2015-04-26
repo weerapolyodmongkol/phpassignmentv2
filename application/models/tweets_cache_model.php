@@ -18,11 +18,11 @@ class Tweets_cache_model extends CI_Model {
     function update_cache() {
     }
 	
-	function get_cache($sKeyword) {
+	function get_cache($sKeyword, $iTime) {
 		$oQuery = $this->db->query("
 			SELECT tweets 
 			FROM phpassignmentv2_twt_cache 
-			WHERE DATE_ADD(modified_date, INTERVAL 1 HOUR) >= NOW() 
+			WHERE DATE_ADD(modified_date, INTERVAL ".$iTime." HOUR) >= NOW() 
 			AND keywords = '".$sKeyword."' LIMIT 1");
 		if ($oQuery->num_rows() > 0) {
 			$oRow = $oQuery->row();
